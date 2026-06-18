@@ -1,5 +1,5 @@
 
-```markdown
+
 # High-Concurrency Flash Sale Booking Engine
 
 An asynchronous, horizontally scalable distributed booking engine designed to process high-frequency transaction spikes (10,000+ requests/sec) without database lock starvation or inventory overselling. Built using Python (FastAPI), Redis, and PostgreSQL, completely containerized via Docker.
@@ -25,6 +25,7 @@ graph TD
     style D fill:#ffcccc,stroke:#333,stroke-width:1px
     style J fill:#ffcccc,stroke:#333,stroke-width:1px
     style E fill:#ccffcc,stroke:#333,stroke-width:1px
+```
 
 ### Key Architectural Patterns
 
