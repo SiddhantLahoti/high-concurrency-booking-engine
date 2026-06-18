@@ -2,7 +2,7 @@
 ```markdown
 # High-Concurrency Flash Sale Booking Engine
 
-An asynchronous, horizontally scalable distributed booking engine designed to process high-frequency transaction spikes ($\ge 10,000\text{ requests/sec}$) without database lock starvation or inventory overselling. Built using Python (FastAPI), Redis, and PostgreSQL, completely containerized via Docker.
+An asynchronous, horizontally scalable distributed booking engine designed to process high-frequency transaction spikes (10,000+ requests/sec) without database lock starvation or inventory overselling. Built using Python (FastAPI), Redis, and PostgreSQL, completely containerized via Docker.
 
 ---
 
@@ -10,22 +10,21 @@ An asynchronous, horizontally scalable distributed booking engine designed to pr
 
 Standard relational database row-level locking (`SELECT FOR UPDATE`) causes rapid connection pool exhaustion, cascading backend timeouts, and system failure under severe write-heavy surges. This architecture eliminates transactional database strain by decoupling stock validation from persistent database mutations.
 
-```text
-[Concurrent Requests] 
-       │
-       ▼
-[FastAPI Gateway Layer]
-       │
-       ├──► [Redis Cluster: Atomic Inventory Decr (Lua Script)] ──(Stock Exhausted)──► [Instant 422 Drop]
-       │
-       ▼ (Stock Secured)
-[PostgreSQL Database] ──► Begin Atomic Transaction
-       │                      ├── Write Order Record (Status: RESERVED)
-       │                      └── Write Outbox Record (Event: OrderCreated)
-       ▼
-   [Commit] ──(On DB Failure)──► [Trigger Saga Compensation] ──► [Re-increment Redis Stock]
-
-```
+```mermaid
+graph TD
+    A[Concurrent Requests] --> B[FastAPI Gateway Layer]
+    B --> C{Atomic Redis Lua Script}
+    C -- Stock Exhausted --> D[Instant 422 Drop]
+    C -- Stock Secured --> E[PostgreSQL Atomic Transaction]
+    E --> F[Write Order Record: RESERVED]
+    E --> G[Write Outbox Record: OrderCreated]
+    F & G --> H{Commit Status}
+    H -- DB Failure / Timeout --> I[Trigger Saga Compensation]
+    I --> J[Re-increment Redis Stock]
+    
+    style D fill:#ffcccc,stroke:#333,stroke-width:1px
+    style J fill:#ffcccc,stroke:#333,stroke-width:1px
+    style E fill:#ccffcc,stroke:#333,stroke-width:1px
 
 ### Key Architectural Patterns
 
